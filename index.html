@@ -6,28 +6,102 @@
   <title>Reporting System</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f4f7fa; color: #333; }
-    header { background: #0070f3; color: white; padding: 20px; text-align: center; }
-    nav { display: flex; background: #005bb5; }
-    nav a { flex: 1; color: white; text-align: center; padding: 14px; text-decoration: none; font-weight: bold; }
-    nav a.active { background: #0070f3; }
-    nav a:hover { background: #0060d0; }
-    .container { max-width: 720px; margin: 30px auto; padding: 0 20px; }
-    form { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    label { display: block; margin: 18px 0 6px; font-weight: 600; }
-    input, textarea { width: 100%; padding: 11px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-    textarea { min-height: 100px; }
-    button { background: #10b981; color: white; border: none; padding: 14px 28px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
-    button:hover { background: #059669; }
-    #status { margin-top: 16px; font-weight: bold; text-align: center; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    .report-item { background: white; padding: 20px; margin: 20px 0; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); line-height: 1.6; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: #f4f7fa;
+      color: #333;
+    }
+    header {
+      background: #0070f3;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    nav {
+      display: flex;
+      background: #005bb5;
+    }
+    nav a {
+      flex: 1;
+      color: white;
+      text-align: center;
+      padding: 14px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a.active {
+      background: #0070f3;
+    }
+    nav a:hover {
+      background: #0060d0;
+    }
+    .container {
+      max-width: 720px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    form {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    label {
+      display: block;
+      margin: 18px 0 6px;
+      font-weight: 600;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    textarea {
+      min-height: 100px;
+    }
+    button {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #059669;
+    }
+    #status {
+      margin-top: 16px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .report-item {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body>
 
-  <header><h1>Reporting System</h1></header>
+  <header>
+    <h1>Reporting System</h1>
+  </header>
 
   <nav>
     <a href="#submit" class="active" onclick="showTab('submit')">Submit Report</a>
@@ -89,8 +163,15 @@
 
       const { data, error } = await supabase.from('reports').select('*').order('created_at', { ascending: false });
 
-      if (error) return list.innerHTML = 'Error: ' + error.message;
-      if (data.length === 0) return list.innerHTML = '<p>No reports yet.</p>';
+      if (error) {
+        list.innerHTML = 'Error: ' + error.message;
+        return;
+      }
+
+      if (data.length === 0) {
+        list.innerHTML = '<p>No reports yet.</p>';
+        return;
+      }
 
       list.innerHTML = '';
       data.forEach(r => {
@@ -110,54 +191,54 @@
       });
     }
 
-    // Fixed: Wait for DOM to be ready before attaching listener
-    document.addEventListener('DOMContentLoaded', () => {
-      const form = document.getElementById('reportForm');
-      if (form) {
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const status = document.getElementById('status');
-          status.textContent = 'Submitting...';
-          status.style.color = 'black';
+    // Attach form listener safely
+    const form = document.getElementById('reportForm');
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const status = document.getElementById('status');
+        status.textContent = 'Submitting...';
+        status.style.color = 'black';
 
-          const reported_user = document.getElementById('reported_user').value.trim() || null;
-          const reason = document.getElementById('reason').value.trim();
-          const punishment = document.getElementById('punishment').value.trim() || null;
-          const moderator = document.getElementById('moderator').value.trim() || null;
-          const link = document.getElementById('link').value.trim() || null;
+        const reported_user = document.getElementById('reported_user').value.trim() || null;
+        const reason = document.getElementById('reason').value.trim();
+        const punishment = document.getElementById('punishment').value.trim() || null;
+        const moderator = document.getElementById('moderator').value.trim() || null;
+        const link = document.getElementById('link').value.trim() || null;
 
-          let image_url = '', video_url = '';
-          const imageFile = document.getElementById('image').files[0];
-          const videoFile = document.getElementById('video').files[0];
+        let image_url = '', video_url = '';
+        const imageFile = document.getElementById('image').files[0];
+        const videoFile = document.getElementById('video').files[0];
 
-          try {
-            if (imageFile) {
-              const path = `images/${Date.now()}_${imageFile.name}`;
-              await supabase.storage.from('report-media').upload(path, imageFile);
-              image_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
-            }
-            if (videoFile) {
-              const path = `videos/${Date.now()}_${videoFile.name}`;
-              await supabase.storage.from('report-media').upload(path, videoFile);
-              video_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
-            }
-
-            const { error } = await supabase.from('reports').insert({
-              reported_user, reason, punishment, moderator, link, image_url, video_url
-            });
-
-            if (error) throw error;
-
-            status.style.color = 'green';
-            status.textContent = 'Report submitted successfully!';
-            form.reset();
-          } catch (err) {
-            status.style.color = 'red';
-            status.textContent = 'Error: ' + (err.message || 'Unknown error');
+        try {
+          if (imageFile) {
+            const path = `images/${Date.now()}_${imageFile.name}`;
+            await supabase.storage.from('report-media').upload(path, imageFile);
+            image_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
           }
-        });
-      }
-    });
+          if (videoFile) {
+            const path = `videos/${Date.now()}_${videoFile.name}`;
+            await supabase.storage.from('report-media').upload(path, videoFile);
+            video_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
+          }
+
+          const { error } = await supabase.from('reports').insert({
+            reported_user, reason, punishment, moderator, link, image_url, video_url
+          });
+
+          if (error) throw error;
+
+          status.style.color = 'green';
+          status.textContent = 'Report submitted successfully!';
+          form.reset();
+        } catch (err) {
+          status.style.color = 'red';
+          status.textContent = 'Error: ' + err.message;
+        }
+      });
+    } else {
+      console.error("Form element not found!");
+    }
   </script>
 </body>
 </html>
