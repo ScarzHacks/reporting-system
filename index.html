@@ -6,7 +6,7 @@
   <title>Reporting System</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7fa; color: #333; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f4f7fa; color: #333; }
     header { background: #0070f3; color: white; padding: 20px; text-align: center; }
     nav { display: flex; background: #005bb5; }
     nav a { flex: 1; color: white; text-align: center; padding: 14px; text-decoration: none; font-weight: bold; }
@@ -27,9 +27,7 @@
 </head>
 <body>
 
-  <header>
-    <h1>Reporting System</h1>
-  </header>
+  <header><h1>Reporting System</h1></header>
 
   <nav>
     <a href="#submit" class="active" onclick="showTab('submit')">Submit Report</a>
@@ -50,7 +48,7 @@
         <input id="punishment" placeholder="e.g. Warning / Ban">
 
         <label>Moderator Who Took Action</label>
-        <input id="moderator" placeholder="Moderator name" required>
+        <input id="moderator" placeholder="Your username" required>
 
         <label>Additional Link</label>
         <input id="link" placeholder="https://" type="url">
@@ -91,15 +89,8 @@
 
       const { data, error } = await supabase.from('reports').select('*').order('created_at', { ascending: false });
 
-      if (error) {
-        list.innerHTML = 'Error: ' + error.message;
-        return;
-      }
-
-      if (data.length === 0) {
-        list.innerHTML = '<p>No reports yet.</p>';
-        return;
-      }
+      if (error) return list.innerHTML = 'Error: ' + error.message;
+      if (data.length === 0) return list.innerHTML = '<p>No reports yet.</p>';
 
       list.innerHTML = '';
       data.forEach(r => {
@@ -119,47 +110,52 @@
       });
     }
 
-    // This is the fixed event listener – form exists now
-    document.getElementById('reportForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const status = document.getElementById('status');
-      status.textContent = 'Submitting...';
-      status.style.color = 'black';
+    // Fixed: Wait for DOM to be ready before attaching listener
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('reportForm');
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const status = document.getElementById('status');
+          status.textContent = 'Submitting...';
+          status.style.color = 'black';
 
-      const reported_user = document.getElementById('reported_user').value.trim() || null;
-      const reason = document.getElementById('reason').value.trim();
-      const punishment = document.getElementById('punishment').value.trim() || null;
-      const moderator = document.getElementById('moderator').value.trim() || null;
-      const link = document.getElementById('link').value.trim() || null;
+          const reported_user = document.getElementById('reported_user').value.trim() || null;
+          const reason = document.getElementById('reason').value.trim();
+          const punishment = document.getElementById('punishment').value.trim() || null;
+          const moderator = document.getElementById('moderator').value.trim() || null;
+          const link = document.getElementById('link').value.trim() || null;
 
-      let image_url = '', video_url = '';
-      const imageFile = document.getElementById('image').files[0];
-      const videoFile = document.getElementById('video').files[0];
+          let image_url = '', video_url = '';
+          const imageFile = document.getElementById('image').files[0];
+          const videoFile = document.getElementById('video').files[0];
 
-      try {
-        if (imageFile) {
-          const path = `images/${Date.now()}_${imageFile.name}`;
-          await supabase.storage.from('report-media').upload(path, imageFile);
-          image_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
-        }
-        if (videoFile) {
-          const path = `videos/${Date.now()}_${videoFile.name}`;
-          await supabase.storage.from('report-media').upload(path, videoFile);
-          video_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
-        }
+          try {
+            if (imageFile) {
+              const path = `images/${Date.now()}_${imageFile.name}`;
+              await supabase.storage.from('report-media').upload(path, imageFile);
+              image_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
+            }
+            if (videoFile) {
+              const path = `videos/${Date.now()}_${videoFile.name}`;
+              await supabase.storage.from('report-media').upload(path, videoFile);
+              video_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
+            }
 
-        const { error } = await supabase.from('reports').insert({
-          reported_user, reason, punishment, moderator, link, image_url, video_url
+            const { error } = await supabase.from('reports').insert({
+              reported_user, reason, punishment, moderator, link, image_url, video_url
+            });
+
+            if (error) throw error;
+
+            status.style.color = 'green';
+            status.textContent = 'Report submitted successfully!';
+            form.reset();
+          } catch (err) {
+            status.style.color = 'red';
+            status.textContent = 'Error: ' + (err.message || 'Unknown error');
+          }
         });
-
-        if (error) throw error;
-
-        status.style.color = 'green';
-        status.textContent = 'Report submitted successfully!';
-        document.getElementById('reportForm').reset();
-      } catch (err) {
-        status.style.color = 'red';
-        status.textContent = 'Error: ' + err.message;
       }
     });
   </script>
