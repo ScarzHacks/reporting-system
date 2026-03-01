@@ -1,4 +1,4 @@
-// script.js - CLEAN - ONLY ONE supabase line - tested
+// script.js - FINAL CLEAN VERSION - ONLY ONE supabase
 
 const supabase = Supabase.createClient(
   'https://tnsjtjstvpzrgznbzjdc.supabase.co',
@@ -173,7 +173,7 @@ document.getElementById('evidence').addEventListener('change', function() {
       if (isVid) { el.muted = true; el.loop = true; el.autoplay = true; }
       d.appendChild(el);
     } else {
-      d.innerHTML = `<div class="w-full h-full bg-gray-100 flex center text-xs p-2">${f.name}</div>`;
+      d.innerHTML = `<div class="w-full h-full bg-gray-100 flex items-center justify-center text-xs p-2">${f.name}</div>`;
     }
     const n = document.createElement('div');
     n.className = 'absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 truncate text-center';
