@@ -130,13 +130,15 @@
     <p>© 2026 Kylito Community • Reports are private</p>
   </footer>
 
-  <!-- Supabase config - REPLACE THESE VALUES -->
-  <script>
-    const SUPABASE_URL = 'https://tnsjtjstvpzrgznbzjdc.supabase.co';           // ← your project URL
-    const SUPABASE_ANON_KEY = 'sb_publishable_c3HyWRydGbYHE9VkP_zRrQ_Ivi9U5fZ...'; // ← your anon public key
+  <!-- ... rest of your HTML (footer, modal, etc.) ... -->
 
-    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  </script>
+  <!-- Supabase client library (keep this) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Your main JavaScript file (keep this) -->
+  <script src="script.js"></script>
+</body>
+</html>
 
   <script src="script.js"></script>
 </body>
