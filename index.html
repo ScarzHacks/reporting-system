@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reporting System</title>
   
-  <!-- ONLY ONE Supabase CDN script (keep this) -->
+  <!-- ONLY ONE Supabase CDN include -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
@@ -154,16 +154,16 @@
   </div>
 
   <script>
-    // ==================== FIXED SUPABASE SETUP ====================
+    // ==================== Supabase Setup (fixed & reliable) ====================
     const supabaseUrl = 'https://ugijazxbscpiwavmkjbr.supabase.co';
     const supabaseKey = 'sb_publishable_tUlhOkObHpTpwlh-9R7x0Q_1kd_q6qe';
 
-    // Pull createClient from the CDN (this is the "destructure" part)
+    // Destructure from the global CDN object
     const { createClient } = window.supabase;
 
-    // Create the actual client with a DIFFERENT name so we NEVER get "already declared"
+    // Use a short, conflict-free name for the client
     const sb = createClient(supabaseUrl, supabaseKey);
-    // ============================================================
+    // =========================================================================
 
     // Tab switching
     function showTab(tabId) {
@@ -247,14 +247,20 @@
       try {
         if (imageFile) {
           const path = `images/${Date.now()}_${imageFile.name}`;
-          await sb.storage.from('report-media').upload(path, imageFile);
-          image_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
+          const { error: uploadError } = await sb.storage.from('report-media').upload(path, imageFile);
+          if (uploadError) throw uploadError;
+
+          const { data: urlData } = sb.storage.from('report-media').getPublicUrl(path);
+          image_url = urlData.publicUrl;
         }
 
         if (videoFile) {
           const path = `videos/${Date.now()}_${videoFile.name}`;
-          await sb.storage.from('report-media').upload(path, videoFile);
-          video_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
+          const { error: uploadError } = await sb.storage.from('report-media').upload(path, videoFile);
+          if (uploadError) throw uploadError;
+
+          const { data: urlData } = sb.storage.from('report-media').getPublicUrl(path);
+          video_url = urlData.publicUrl;
         }
 
         const { error } = await sb
