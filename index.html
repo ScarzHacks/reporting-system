@@ -58,13 +58,13 @@
 
   <script>
     // ────────────────────────────────────────────────
-    // ONLY ONE Supabase client – this is the only place it is declared
+    // Single Supabase client using the requested syntax
     // ────────────────────────────────────────────────
     const supabaseUrl = 'https://ugijazxbscpiwavmkjbr.supabase.co';
     const supabaseKey = 'sb_publishable_tUlhOkObHpTpwlh-9R7x0Q_1kd_q6qe';
-    const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Submit handler (no duplicates)
+    // Submit handler
     document.getElementById('reportForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const status = document.getElementById('status');
