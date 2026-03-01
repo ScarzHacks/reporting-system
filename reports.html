@@ -35,7 +35,9 @@
   </div>
 
   <script>
-    // Only ONE Supabase declaration
+    // ────────────────────────────────────────────────
+    // SINGLE Supabase setup – this is the only declaration
+    // ────────────────────────────────────────────────
     const supabaseUrl = 'https://ugijazxbscpiwavmkjbr.supabase.co';
     const supabaseKey = 'sb_publishable_tUlhOkObHpTpwlh-9R7x0Q_1kd_q6qe';
     const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
@@ -59,8 +61,8 @@
         allReports = data || [];
         renderReports(allReports);
       } catch (err) {
-        console.error('Supabase error:', err);
-        errorDiv.innerHTML = `Failed to load reports: ${err.message || 'Unknown error'}<br><br>Code: ${err.code || 'N/A'}<br><br>Possible causes:<br>- Row Level Security (RLS) blocking anon read access<br>- Check Supabase policies or run SELECT * FROM reports in SQL Editor<br><br>Try refreshing or check browser console (F12).`;
+        console.error('Supabase fetch error:', err);
+        errorDiv.innerHTML = `Failed to load reports: ${err.message || 'Unknown error'}<br><br>Code: ${err.code || 'N/A'}<br><br>Possible causes:<br>- Row Level Security (RLS) blocking public read access<br>- Check Supabase policies (SQL Editor → Run: SELECT * FROM reports LIMIT 5;)<br>- Browser Tracking Prevention blocking CDN (try Chrome/Firefox or disable in Edge settings)`;
         list.innerHTML = '';
       }
     }
@@ -91,7 +93,7 @@
       });
     }
 
-    // Real-time search (case-insensitive)
+    // Live search
     document.getElementById('searchBox').addEventListener('input', function() {
       const term = this.value.toLowerCase().trim();
       const filtered = allReports.filter(r =>
@@ -104,7 +106,7 @@
       renderReports(filtered);
     });
 
-    // Load on page open
+    // Load reports when page opens
     loadReports();
   </script>
 </body>
