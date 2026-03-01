@@ -1,14 +1,13 @@
-// script.js – ONLY ONE supabase declaration – no duplicates
+// script.js – SINGLE supabase client declaration – no duplicates allowed
 
-// Create Supabase client (this should be the ONLY place this line exists)
 const supabase = Supabase.createClient(
-  'https://tnsjtjstvpzrgznbzjdc.supabase.co',                          // ← REPLACE WITH YOUR REAL PROJECT URL
-  'sb_publishable_c3HyWRydGbYHE9VkP_zRrQ_Ivi9U5fZ'               // ← your publishable key
+  'https://tnsjtjstvpzrgznbzjdc.supabase.co',
+  'sb_publishable_c3HyWRydGbYHE9VkP_zRrQ_Ivi9U5fZ'
 );
 
 let reports = [];
 
-// Load reports from Supabase
+// Load reports
 async function loadReports() {
   const { data, error } = await supabase
     .from('reports')
@@ -18,7 +17,7 @@ async function loadReports() {
   if (error) {
     console.error('Load error:', error.message);
     document.getElementById('reportsList').innerHTML = 
-      '<p class="text-center text-red-600 py-12">Error loading: ' + (error.message || 'Connection issue') + '</p>';
+      '<p class="text-center text-red-600 py-12">Error loading reports: ' + (error.message || 'Check connection') + '</p>';
     return;
   }
 
@@ -39,7 +38,7 @@ function renderReports(filter = '') {
   );
 
   container.innerHTML = filtered.length === 0 
-    ? `<p class="text-center text-gray-500 py-12">No reports found${filter ? ` matching "${filter}"` : ''}</p>`
+    ? `<p class="text-center text-gray-500 py-12">No reports${filter ? ` matching "${filter}"` : ''}</p>`
     : filtered.map(r => {
         const date = new Date(r.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
         return `
@@ -100,7 +99,7 @@ document.getElementById('previewModal')?.addEventListener('click', e => {
 document.getElementById('reportForm').addEventListener('submit', async function(e) {
   e.preventDefault();
 
-  console.log('Submit clicked – processing...');
+  console.log('Submit clicked');
 
   const formData = new FormData(e.target);
   const files = document.getElementById('evidence').files;
@@ -139,12 +138,12 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     });
 
   if (insertError) {
-    console.error('Insert failed:', insertError);
-    alert('Failed to submit:\n' + (insertError.message || 'Check console (F12)'));
+    console.error('Insert error:', insertError);
+    alert('Submit failed:\n' + (insertError.message || 'Check console'));
     return;
   }
 
-  console.log('Report submitted successfully');
+  console.log('Report sent');
   document.getElementById('successMessage').classList.remove('hidden');
   e.target.reset();
   document.getElementById('previewContainer').innerHTML = '';
@@ -156,21 +155,21 @@ document.getElementById('reportForm').addEventListener('submit', async function(
   }, 1500);
 });
 
-// Delete report
+// Delete
 window.deleteReport = async function(id) {
-  if (!confirm('Delete this report?')) return;
+  if (!confirm('Delete?')) return;
   await supabase.from('reports').delete().eq('id', id);
   loadReports();
 };
 
-// Clear all (for testing)
+// Clear all
 window.clearAllReports = async function() {
-  if (!confirm('Clear ALL reports?')) return;
-  await supabase.from('reports').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  if (!confirm('Clear all?')) return;
+  await supabase.from('reports').delete().neq('id', '0');
   loadReports();
 };
 
-// Tab switching
+// Tabs
 function showSubmit() {
   document.getElementById('submitSection').classList.remove('hidden');
   document.getElementById('viewSection').classList.add('hidden');
@@ -189,56 +188,41 @@ function showView() {
   renderReports(document.getElementById('searchInput').value);
 }
 
-// File preview on select
+// File preview
 document.getElementById('evidence').addEventListener('change', function() {
   const container = document.getElementById('previewContainer');
   container.innerHTML = '';
-
   Array.from(this.files).forEach(file => {
     const div = document.createElement('div');
     div.className = 'relative rounded-xl overflow-hidden border w-full aspect-square';
-
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
-
     if (isImage || isVideo) {
       const el = isImage ? document.createElement('img') : document.createElement('video');
       el.src = URL.createObjectURL(file);
       el.className = 'w-full h-full object-cover';
-      if (isVideo) {
-        el.muted = true;
-        el.loop = true;
-        el.autoplay = true;
-      }
+      if (isVideo) { el.muted = true; el.loop = true; el.autoplay = true; }
       div.appendChild(el);
     } else {
-      div.innerHTML = `<div class="w-full h-full bg-gray-100 flex items-center justify-center text-xs p-2 text-center">${file.name}</div>`;
+      div.innerHTML = `<div class="w-full h-full bg-gray-100 flex items-center justify-center text-xs p-2">${file.name}</div>`;
     }
-
-    const nameTag = document.createElement('div');
-    nameTag.className = 'absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 truncate text-center';
-    nameTag.textContent = file.name;
-    div.appendChild(nameTag);
-
+    const name = document.createElement('div');
+    name.className = 'absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 truncate text-center';
+    name.textContent = file.name;
+    div.appendChild(name);
     container.appendChild(div);
   });
 });
 
-// Search input
-document.getElementById('searchInput').addEventListener('input', e => {
-  renderReports(e.target.value);
-});
+// Search
+document.getElementById('searchInput').addEventListener('input', e => renderReports(e.target.value));
 
-// Start app
+// Init
 window.onload = () => {
-  console.log('App loaded – connecting to Supabase...');
+  console.log('Page loaded – connecting...');
   loadReports();
   showSubmit();
-
-  supabase.channel('reports-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'reports' }, () => {
-      console.log('Realtime update detected');
-      loadReports();
-    })
-    .subscribe(status => console.log('Realtime status:', status));
+  supabase.channel('reports')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'reports' }, loadReports)
+    .subscribe();
 };

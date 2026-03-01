@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase client library only – no client creation here -->
+  <!-- Supabase library only -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -111,7 +111,7 @@
           class="px-6 py-3 text-red-600 hover:text-red-700 font-medium flex items-center gap-2">
           🗑️ Clear all reports (demo)
         </button>
-        <button onclick="showView()" 
+        <button onclick="showSubmit()" 
           class="px-6 py-3 bg-gray-200 hover:bg-gray-300 rounded-2xl font-medium">
           ← Back to Submit
         </button>
@@ -129,7 +129,6 @@
     <p>© 2026 Kylito Community • Reports are private • Browser demo</p>
   </footer>
 
-  <!-- Main script – client is created inside here -->
   <script src="script.js"></script>
 </body>
 </html>
