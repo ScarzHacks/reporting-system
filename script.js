@@ -1,8 +1,14 @@
-// script.js – Shared reports via Supabase (updated for better error visibility)
+// script.js – Shared reports via Supabase – single supabase declaration
+
+// Create Supabase client (only once, here)
+const supabase = Supabase.createClient(
+  'https://tnsjtjstvpzrgznbzjdc.supabase.co',                          // ← REPLACE with your real Project URL
+  'sb_publishable_c3HyWRydGbYHE9VkP_zRrQ_Ivi9U5fZ'               // ← your publishable key
+);
 
 let reports = [];
 
-// Load all reports from Supabase
+// Load reports
 async function loadReports() {
   const { data, error } = await supabase
     .from('reports')
@@ -10,7 +16,7 @@ async function loadReports() {
     .order('timestamp', { ascending: false });
 
   if (error) {
-    console.error('Error fetching reports:', error.message);
+    console.error('Load error:', error.message);
     document.getElementById('reportsList').innerHTML = 
       '<p class="text-center text-red-600 py-12">Error loading reports: ' + error.message + '</p>';
     return;
@@ -20,7 +26,7 @@ async function loadReports() {
   renderReports();
 }
 
-// Render reports list
+// Render list
 function renderReports(filter = '') {
   const container = document.getElementById('reportsList');
   const lowerFilter = filter.toLowerCase();
@@ -56,10 +62,10 @@ function renderReports(filter = '') {
         
         ${r.evidence?.length ? `
         <div class="mb-4">
-          <span class="text-xs uppercase tracking-widest text-gray-500 mb-2 block">Evidence:</span>
+          <span class="text-xs uppercase text-gray-500 mb-2 block">Evidence:</span>
           <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
             ${r.evidence.map((url, idx) => `
-              <div class="cursor-pointer overflow-hidden rounded-xl border border-gray-200 hover:border-blue-400 transition"
+              <div class="cursor-pointer rounded-xl overflow-hidden border hover:border-blue-400 transition"
                    onclick="openPreview('${url}', ${/\.(jpg|jpeg|png|gif|webp)$/i.test(url)}, ${/\.(mp4|webm|mov)$/i.test(url)}, ${idx})">
                 ${/\.(jpg|jpeg|png|gif|webp)$/i.test(url) ? 
                   `<img src="${url}" alt="Evidence" class="w-full h-24 object-cover">` :
@@ -71,8 +77,7 @@ function renderReports(filter = '') {
           </div>
         </div>` : ''}
         
-        <button onclick="deleteReport('${r.id}')" 
-          class="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-1 mt-2">
+        <button onclick="deleteReport('${r.id}')" class="text-red-500 hover:text-red-700 text-sm mt-2">
           🗑️ Delete
         </button>
       </div>
@@ -80,20 +85,15 @@ function renderReports(filter = '') {
   }).join('');
 }
 
-// Open full-size preview
+// Preview modal
 function openPreview(url, isImage, isVideo) {
   const modal = document.getElementById('previewModal');
   const content = document.getElementById('modalContent');
-  content.innerHTML = '';
-
-  if (isImage) {
-    content.innerHTML = `<img src="${url}" alt="Full evidence" class="max-w-[90%] max-h-[90vh]">`;
-  } else if (isVideo) {
-    content.innerHTML = `<video src="${url}" controls autoplay class="max-w-[90%] max-h-[90vh]"></video>`;
-  } else {
-    content.innerHTML = '<p class="text-white text-xl">Cannot preview this file type</p>';
-  }
-
+  content.innerHTML = isImage ? 
+    `<img src="${url}" alt="Full view" class="max-w-[90%] max-h-[90vh]">` :
+    isVideo ? 
+    `<video src="${url}" controls autoplay class="max-w-[90%] max-h-[90vh]"></video>` :
+    '<p class="text-white text-xl">Cannot preview</p>';
   modal.style.display = 'flex';
 }
 
@@ -102,112 +102,84 @@ document.getElementById('closeModal').addEventListener('click', () => {
 });
 
 document.getElementById('previewModal').addEventListener('click', e => {
-  if (e.target.id === 'previewModal') {
-    document.getElementById('previewModal').style.display = 'none';
-  }
+  if (e.target.id === 'previewModal') document.getElementById('previewModal').style.display = 'none';
 });
 
-// Submit new report + upload files
+// Submit handler
 document.getElementById('reportForm').addEventListener('submit', async function(e) {
   e.preventDefault();
+
+  console.log('Submit started');
 
   const formData = new FormData(e.target);
   const files = document.getElementById('evidence').files;
   const evidenceUrls = [];
 
-  // Upload files one by one
   for (const file of files) {
     if (file.size > 50 * 1024 * 1024) {
-      alert(`File too large: ${file.name}\n\nMax allowed: 50 MB per file (current free plan limit).\nTry compressing the file or use a smaller one.`);
+      alert(`File too large: ${file.name} (max 50 MB)`);
       continue;
     }
 
     const fileExt = file.name.split('.').pop();
     const filePath = `${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
 
-    const { data, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('evidence')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+      .upload(filePath, file);
 
     if (uploadError) {
-      console.error('Upload failed for', file.name, ':', uploadError);
-      alert(`Failed to upload ${file.name}: ${uploadError.message || 'Unknown error'}`);
+      console.error('Upload error:', uploadError);
+      alert(`Upload failed: ${uploadError.message}`);
       continue;
     }
 
-    const { data: urlData } = supabase.storage
-      .from('evidence')
-      .getPublicUrl(filePath);
-
+    const { data: urlData } = supabase.storage.from('evidence').getPublicUrl(filePath);
     evidenceUrls.push(urlData.publicUrl);
   }
 
-  // Insert report record – with improved error logging
-  const { data: inserted, error: insertError } = await supabase
+  const { error: insertError } = await supabase
     .from('reports')
     .insert({
-      username: formData.get('username')?.trim() || 'Anonymous',
+      username: formData.get('username')?.trim() || 'Unknown',
       reason: formData.get('reason')?.trim() || 'Other',
       details: formData.get('details')?.trim() || '',
       evidence: evidenceUrls.length ? evidenceUrls : null
     });
 
   if (insertError) {
-    console.error('Report insert failed:', insertError);
-    alert(`Failed to submit report:\n${insertError.message || 'Unknown error'}\n\nCheck browser console (F12) for details.`);
+    console.error('Insert failed:', insertError);
+    alert('Failed to submit:\n' + (insertError.message || 'Check console'));
     return;
   }
 
-  console.log('Report successfully inserted:', inserted);
-
-  // Success feedback
+  console.log('Report sent successfully');
   document.getElementById('successMessage').classList.remove('hidden');
   e.target.reset();
   document.getElementById('previewContainer').innerHTML = '';
-
   await loadReports();
 
   setTimeout(() => {
     showView();
     document.getElementById('successMessage').classList.add('hidden');
-  }, 1800);
+  }, 1500);
 });
 
-// Delete report
+// Delete
 window.deleteReport = async function(id) {
-  if (!confirm('Delete this report?')) return;
-
-  const { error } = await supabase
-    .from('reports')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error('Delete failed:', error);
-    alert('Could not delete report: ' + (error.message || 'Unknown error'));
-    return;
-  }
-
+  if (!confirm('Delete?')) return;
+  await supabase.from('reports').delete().eq('id', id);
   loadReports();
 };
 
-// Clear all – for testing
+// Clear all (demo)
 window.clearAllReports = async function() {
-  if (!confirm('Delete ALL reports? This is irreversible.')) return;
-
-  const { error } = await supabase
-    .from('reports')
-    .delete()
-    .neq('id', '00000000-0000-0000-0000-000000000000');
-
-  if (error) console.error('Clear all failed:', error);
+  if (!confirm('Clear all?')) return;
+  await supabase.from('reports').delete().neq('id', '0');
   loadReports();
 };
 
-// Tab switching
+// Tabs
 function showSubmit() {
   document.getElementById('submitSection').classList.remove('hidden');
   document.getElementById('viewSection').classList.add('hidden');
@@ -226,55 +198,38 @@ function showView() {
   renderReports(document.getElementById('searchInput').value);
 }
 
-// Local file preview (before upload)
+// File preview
 document.getElementById('evidence').addEventListener('change', function() {
   const container = document.getElementById('previewContainer');
   container.innerHTML = '';
-
   Array.from(this.files).forEach(file => {
     const div = document.createElement('div');
-    div.className = 'relative rounded-xl overflow-hidden border border-gray-200 shadow-sm w-full aspect-square';
-
+    div.className = 'relative rounded-xl overflow-hidden border w-full aspect-square';
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
-
     if (isImage || isVideo) {
       const el = isImage ? document.createElement('img') : document.createElement('video');
       el.src = URL.createObjectURL(file);
       el.className = 'w-full h-full object-cover';
-      if (isVideo) {
-        el.muted = true;
-        el.loop = true;
-        el.autoplay = true;
-      }
+      if (isVideo) { el.muted = true; el.loop = true; el.autoplay = true; }
       div.appendChild(el);
     } else {
-      div.innerHTML = `<div class="w-full h-full bg-gray-100 flex items-center justify-center text-xs p-2 text-center">${file.name}</div>`;
+      div.innerHTML = `<div class="w-full h-full bg-gray-100 flex items-center justify-center text-xs p-2">${file.name}</div>`;
     }
-
     const name = document.createElement('div');
     name.className = 'absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 truncate text-center';
     name.textContent = file.name;
     div.appendChild(name);
-
     container.appendChild(div);
   });
 });
 
-// Search (client-side filter)
-document.getElementById('searchInput').addEventListener('input', e => {
-  renderReports(e.target.value);
-});
+// Search
+document.getElementById('searchInput').addEventListener('input', e => renderReports(e.target.value));
 
-// Realtime updates + initial load
+// Init
 window.onload = () => {
   loadReports();
   showSubmit();
-
-  supabase
-    .channel('public:reports')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'reports' }, () => {
-      loadReports();
-    })
-    .subscribe();
+  supabase.channel('reports').on('postgres_changes', { event: '*', schema: 'public', table: 'reports' }, loadReports).subscribe();
 };
