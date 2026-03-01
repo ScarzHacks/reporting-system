@@ -1,110 +1,127 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Submit Report</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7fa; color: #333; }
-    header { background: #0070f3; color: white; padding: 25px; text-align: center; }
-    .container { max-width: 700px; margin: 40px auto; padding: 0 20px; }
-    form { background: white; padding: 35px; border-radius: 12px; box-shadow: 0 6px 25px rgba(0,0,0,0.1); }
-    label { display: block; margin: 20px 0 8px; font-weight: 600; }
-    input, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
-    textarea { min-height: 120px; }
-    button { background: #10b981; color: white; border: none; padding: 14px 30px; border-radius: 6px; font-size: 17px; cursor: pointer; margin-top: 25px; }
-    button:hover { background: #059669; }
-    #status { margin-top: 20px; font-weight: bold; text-align: center; }
-    .view-link { text-align: center; margin-top: 40px; font-size: 18px; }
-  </style>
-</head>
-<body>
+<script>
+  // === ONLY ONE Supabase client (CDN version) ===
+  const supabaseUrl = 'https://ugijazxbscpiwavmkjbr.supabase.co';
+  const supabaseKey = 'sb_publishable_tUlhOkObHpTpwlh-9R7x0Q_1kd_q6qe';
 
-  <header><h1>Submit a New Report</h1></header>
+  // Destructure from the CDN global first
+  const { createClient } = supabase;
 
-  <div class="container">
-    <form id="reportForm">
-      <label>Reported User Name</label>
-      <input id="reported_user" placeholder="Username or ID" required>
+  // Now create the actual client (this is the one we use everywhere)
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
-      <label>Reason for Report</label>
-      <textarea id="reason" placeholder="Describe what happened..." required></textarea>
+  // Tab switching
+  function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
 
-      <label>Proposed Punishment</label>
-      <input id="punishment" placeholder="e.g. Warning, 7-day ban">
+    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+    document.querySelector(`nav a[href="#${tabId}"]`).classList.add('active');
 
-      <label>Moderator Who Took Action</label>
-      <input id="moderator" placeholder="Your username" required>
+    if (tabId === 'view') {
+      loadReports();
+    }
+  }
 
-      <label>Additional Link (proof)</label>
-      <input id="link" placeholder="https://" type="url">
+  // Load all reports
+  async function loadReports() {
+    const list = document.getElementById('reports-list');
+    list.innerHTML = 'Loading reports...';
 
-      <label>Image Proof (optional)</label>
-      <input type="file" id="image" accept="image/*">
+    const { data, error } = await supabase
+      .from('reports')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-      <label>Video Proof (optional)</label>
-      <input type="file" id="video" accept="video/*">
+    if (error) {
+      list.innerHTML = `<p style="color:red; text-align:center;">Error loading reports: ${error.message}</p>`;
+      return;
+    }
 
-      <button type="submit">Submit Report</button>
-    </form>
+    if (!data || data.length === 0) {
+      list.innerHTML = '<p style="text-align:center; color:#666; font-style:italic;">No reports have been submitted yet.</p>';
+      return;
+    }
 
-    <div id="status"></div>
+    list.innerHTML = '';
+    data.forEach(report => {
+      const item = document.createElement('div');
+      item.className = 'report-item';
+      item.innerHTML = `
+        <strong>Reported user:</strong> ${report.reported_user || '—'}<br>
+        <strong>Reason:</strong> ${report.reason || '—'}<br>
+        <strong>Punishment:</strong> ${report.punishment || 'None specified'}<br>
+        <strong>Moderator:</strong> ${report.moderator || '—'}<br>
+        <strong>Submitted:</strong> ${new Date(report.created_at).toLocaleString()}<br>
+      `;
 
-    <div class="view-link">
-      <a href="reports.html" style="color:#0070f3; text-decoration:none;">→ View All Reports</a>
-    </div>
-  </div>
+      if (report.link) {
+        item.innerHTML += `<strong>Proof link:</strong> <a href="${report.link}" target="_blank" rel="noopener noreferrer">${report.link}</a><br>`;
+      }
+      if (report.image_url) {
+        item.innerHTML += `<img src="${report.image_url}" style="max-width:100%; margin-top:12px; border-radius:8px;" alt="Proof image"><br>`;
+      }
+      if (report.video_url) {
+        item.innerHTML += `<video src="${report.video_url}" controls style="max-width:100%; margin-top:12px; border-radius:8px;"></video><br>`;
+      }
 
-  <script>
-    // ONLY ONE Supabase client using createClient syntax
-    const supabaseUrl = 'https://ugijazxbscpiwavmkjbr.supabase.co';
-    const supabaseKey = 'sb_publishable_tUlhOkObHpTpwlh-9R7x0Q_1kd_q6qe';
-    const supabase = createClient(supabaseUrl, supabaseKey);
+      list.appendChild(item);
+    });
+  }
 
-    document.getElementById('reportForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const status = document.getElementById('status');
-      status.textContent = 'Submitting...';
-      status.style.color = 'black';
+  // Submit new report
+  document.getElementById('reportForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
 
-      const reported_user = document.getElementById('reported_user').value.trim() || null;
-      const reason = document.getElementById('reason').value.trim();
-      const punishment = document.getElementById('punishment').value.trim() || null;
-      const moderator = document.getElementById('moderator').value.trim() || null;
-      const link = document.getElementById('link').value.trim() || null;
+    const status = document.getElementById('status');
+    status.textContent = 'Submitting report...';
+    status.style.color = 'black';
 
-      let image_url = '', video_url = '';
-      const imageFile = document.getElementById('image').files[0];
-      const videoFile = document.getElementById('video').files[0];
+    const reported_user = document.getElementById('reported_user').value.trim() || null;
+    const reason = document.getElementById('reason').value.trim();
+    const punishment = document.getElementById('punishment').value.trim() || null;
+    const moderator = document.getElementById('moderator').value.trim() || null;
+    const link = document.getElementById('link').value.trim() || null;
 
-      try {
-        if (imageFile) {
-          const path = `images/${Date.now()}_${imageFile.name}`;
-          await supabase.storage.from('report-media').upload(path, imageFile);
-          image_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
-        }
-        if (videoFile) {
-          const path = `videos/${Date.now()}_${videoFile.name}`;
-          await supabase.storage.from('report-media').upload(path, videoFile);
-          video_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
-        }
+    let image_url = '';
+    let video_url = '';
 
-        const { error } = await supabase.from('reports').insert({
-          reported_user, reason, punishment, moderator, link, image_url, video_url
+    const imageFile = document.getElementById('image').files[0];
+    const videoFile = document.getElementById('video').files[0];
+
+    try {
+      if (imageFile) {
+        const path = `images/${Date.now()}_${imageFile.name}`;
+        await supabase.storage.from('report-media').upload(path, imageFile);
+        image_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
+      }
+
+      if (videoFile) {
+        const path = `videos/${Date.now()}_${videoFile.name}`;
+        await supabase.storage.from('report-media').upload(path, videoFile);
+        video_url = `${supabaseUrl}/storage/v1/object/public/report-media/${path}`;
+      }
+
+      const { error } = await supabase
+        .from('reports')
+        .insert({
+          reported_user,
+          reason,
+          punishment,
+          moderator,
+          link,
+          image_url,
+          video_url
         });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        status.style.color = 'green';
-        status.textContent = '✅ Report submitted successfully!';
-        document.getElementById('reportForm').reset();
-      } catch (err) {
-        status.style.color = 'red';
-        status.textContent = '❌ Error: ' + err.message;
-        console.error(err);
-      }
-    });
-  </script>
-</body>
-</html>
+      status.style.color = 'green';
+      status.textContent = 'Report submitted successfully!';
+      document.getElementById('reportForm').reset();
+    } catch (err) {
+      status.style.color = 'red';
+      status.textContent = 'Submission failed: ' + (err.message || 'Unknown error');
+      console.error(err);
+    }
+  });
+</script>
