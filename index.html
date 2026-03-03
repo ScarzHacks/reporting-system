@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EW Mod Panel</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
+    /* Your original styles remain unchanged */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -152,7 +152,6 @@
       text-align: center;
       padding: 20px;
     }
-
     /* Background image only on reports tab */
     #view {
       position: relative;
@@ -184,73 +183,67 @@
       position: relative;
       z-index: 1;
     }
- /* ──── Red + Black RGB Glowing Orbs ──── */
-.orb {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: -1;
-  opacity: 0.4;
-  animation: floatOrb 22s infinite ease-in-out, pulseOrb 7s infinite alternate;
-}
-
-#view::after::before,
-#view::after::after,
-#view::after::before::before {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: -1;
-  opacity: 0.4;
-  animation: floatOrb 22s infinite ease-in-out, pulseOrb 7s infinite alternate;
-}
-
-/* orb-red */
-#view::after::before {
-  width: 380px;
-  height: 380px;
-  background: radial-gradient(circle at 35% 45%, #ff1a1a 10%, transparent 70%);
-  box-shadow: 0 0 140px #ff1a1a, inset 0 0 70px #660000;
-  top: 12%;
-  left: 5%;
-  animation-delay: 0s;
-}
-
-/* orb-dark */
-#view::after::after {
-  width: 320px;
-  height: 320px;
-  background: radial-gradient(circle at 60% 65%, #330000 15%, transparent 65%);
-  box-shadow: 0 0 120px #330000, inset 0 0 60px #000000;
-  bottom: 18%;
-  right: 10%;
-  animation-delay: 5s;
-}
-
-/* orb-glow */
-#view::after::before::before {
-  width: 450px;
-  height: 450px;
-  background: radial-gradient(circle at 50% 30%, #990000 5%, transparent 75%);
-  box-shadow: 0 0 160px #990000, inset 0 0 80px #330000;
-  top: 40%;
-  left: 50%;
-  transform: translateX(-50%);
-  animation-delay: 11s;
-}
-
-@keyframes floatOrb {
-  0%, 100% { transform: translate(0, 0); }
-  25%  { transform: translate(60px, -40px); }
-  50%  { transform: translate(-30px, 70px); }
-  75%  { transform: translate(-80px, -30px); }
-}
-
-@keyframes pulseOrb {
-  0%   { opacity: 0.28; transform: scale(0.92); }
-  100% { opacity: 0.55; transform: scale(1.18); }
-}
+    /* ──── Red + Black RGB Glowing Orbs ──── */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.4;
+      animation: floatOrb 22s infinite ease-in-out, pulseOrb 7s infinite alternate;
+    }
+    #view::after::before,
+    #view::after::after,
+    #view::after::before::before {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.4;
+      animation: floatOrb 22s infinite ease-in-out, pulseOrb 7s infinite alternate;
+    }
+    /* orb-red */
+    #view::after::before {
+      width: 380px;
+      height: 380px;
+      background: radial-gradient(circle at 35% 45%, #ff1a1a 10%, transparent 70%);
+      box-shadow: 0 0 140px #ff1a1a, inset 0 0 70px #660000;
+      top: 12%;
+      left: 5%;
+      animation-delay: 0s;
+    }
+    /* orb-dark */
+    #view::after::after {
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle at 60% 65%, #330000 15%, transparent 65%);
+      box-shadow: 0 0 120px #330000, inset 0 0 60px #000000;
+      bottom: 18%;
+      right: 10%;
+      animation-delay: 5s;
+    }
+    /* orb-glow */
+    #view::after::before::before {
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle at 50% 30%, #990000 5%, transparent 75%);
+      box-shadow: 0 0 160px #990000, inset 0 0 80px #330000;
+      top: 40%;
+      left: 50%;
+      transform: translateX(-50%);
+      animation-delay: 11s;
+    }
+    @keyframes floatOrb {
+      0%, 100% { transform: translate(0, 0); }
+      25%  { transform: translate(60px, -40px); }
+      50%  { transform: translate(-30px, 70px); }
+      75%  { transform: translate(-80px, -30px); }
+    }
+    @keyframes pulseOrb {
+      0%   { opacity: 0.28; transform: scale(0.92); }
+      100% { opacity: 0.55; transform: scale(1.18); }
+    }
   </style>
 </head>
 <body>
@@ -340,6 +333,11 @@
     const COOLDOWN_MS = 60 * 1000; // 1 minute
 
     // ────────────────────────────────────────────────
+    // DISCORD WEBHOOK (added here)
+    // ────────────────────────────────────────────────
+    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1475096593781755957/BGMMBDGhj8oON92-EolQUaG2QS3_dK4Wc_QfzLyQ5_2zjPwR0azy1dyQAr18siCclgCZ";
+
+    // ────────────────────────────────────────────────
     // REST OF THE SCRIPT
     // ────────────────────────────────────────────────
     const supabaseUrl = 'https://ugijazxbscpiwavmkjbr.supabase.co';
@@ -413,9 +411,11 @@
         if (report.link) {
           item.innerHTML += `<strong>Proof link:</strong> <a href="${report.link}" target="_blank" rel="noopener noreferrer">${report.link}</a><br>`;
         }
+
         if (report.image_url) {
           item.innerHTML += `<img src="${report.image_url}" style="max-width:100%; margin-top:12px; border-radius:8px;" alt="Proof image"><br>`;
         }
+
         if (report.video_url) {
           item.innerHTML += `<video src="${report.video_url}" controls style="max-width:100%; margin-top:12px; border-radius:8px;"></video><br>`;
         }
@@ -435,11 +435,11 @@
       if (!term) return renderReports(allReports);
 
       const filtered = allReports.filter(r =>
-        (r.reported_user   || '').toLowerCase().includes(term) ||
-        (r.reason          || '').toLowerCase().includes(term) ||
-        (r.punishment      || '').toLowerCase().includes(term) ||
-        (r.moderator       || '').toLowerCase().includes(term) ||
-        (r.link            || '').toLowerCase().includes(term)
+        (r.reported_user || '').toLowerCase().includes(term) ||
+        (r.reason || '').toLowerCase().includes(term) ||
+        (r.punishment || '').toLowerCase().includes(term) ||
+        (r.moderator || '').toLowerCase().includes(term) ||
+        (r.link || '').toLowerCase().includes(term)
       );
 
       renderReports(filtered);
@@ -451,7 +451,6 @@
         alert("Incorrect delete password.");
         return;
       }
-
       if (!confirm('Delete this report permanently?')) return;
 
       try {
@@ -469,7 +468,6 @@
         reportElement.remove();
         allReports = allReports.filter(r => r.id !== reportId);
         renderReports(allReports);
-
         console.log('Report deleted (ID:', reportId, ')');
       } catch (err) {
         console.error('Delete failed:', err);
@@ -500,10 +498,8 @@
       const punishment = document.getElementById('punishment').value.trim() || null;
       const moderator = document.getElementById('moderator').value.trim() || null;
       const link = document.getElementById('link').value.trim() || null;
-
       let image_url = '';
       let video_url = '';
-
       const imageFile = document.getElementById('image').files[0];
       const videoFile = document.getElementById('video').files[0];
 
@@ -538,14 +534,36 @@
 
         if (error) throw error;
 
+        // ────────────────────────────────────────────────
+        // SEND DISCORD NOTIFICATION
+        // ────────────────────────────────────────────────
+        fetch(DISCORD_WEBHOOK_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            content: "Report has been made, view on https://easternwarfarereports.github.io/reports-form/#submit"
+          })
+        })
+        .then(response => {
+          if (!response.ok) {
+            console.warn('Discord webhook failed:', response.status);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to send Discord notification:', err);
+        });
+        // ────────────────────────────────────────────────
+
         // Save submit timestamp
         localStorage.setItem('lastReportTime', Date.now().toString());
 
         status.style.color = '#2ea043';
         status.textContent = 'Report submitted successfully!';
         document.getElementById('reportForm').reset();
-
         setTimeout(() => status.textContent = '', 4000);
+
       } catch (err) {
         status.style.color = '#f85149';
         status.textContent = 'Submission failed: ' + (err.message || 'Unknown error');
