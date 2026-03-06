@@ -4,57 +4,251 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EW Mod Panel</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #0d1117; color: #e6edf3; }
-    header { background: #1f6feb; color: white; padding: 20px; text-align: center; }
-    nav { display: flex; background: #0d47a1; }
-    nav a { flex: 1; color: white; text-align: center; padding: 14px; text-decoration: none; font-weight: bold; transition: background 0.2s; }
-    nav a.active { background: #1f6feb; }
-    nav a:hover { background: #388bfd; }
-    .container { max-width: 760px; margin: 30px auto; padding: 0 20px; }
-    form { background: rgba(22, 27, 34, 0.92); padding: 30px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); color: #e6edf3; }
-    label { display: block; margin: 18px 0 6px; font-weight: 600; }
-    input, textarea { width: 100%; padding: 11px; border: 1px solid #30363d; border-radius: 6px; box-sizing: border-box; font-size: 16px; background: #0d1117; color: #e6edf3; }
-    textarea { resize: vertical; min-height: 100px; }
-    button { background: #238636; color: white; border: none; padding: 14px 28px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; transition: background 0.2s; }
-    button:hover { background: #2ea043; }
-    #status { margin-top: 16px; font-weight: bold; text-align: center; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    .report-item { background: rgba(22, 27, 34, 0.92); padding: 20px; margin: 20px 0; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.4); line-height: 1.6; position: relative; }
-    .delete-btn { background: #da3633; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; position: absolute; top: 15px; right: 15px; }
-    .delete-btn:hover { background: #f85149; }
-    #search-container { margin: 20px 0; text-align: center; }
-    #searchInput { width: 100%; max-width: 500px; padding: 12px; font-size: 16px; border: 1px solid #30363d; border-radius: 6px; background: #0d1117; color: #e6edf3; }
-    #no-results { text-align: center; color: #8b949e; font-style: italic; margin: 30px 0; display: none; }
-    #login-screen, #denied-screen { position: fixed; inset: 0; background: #000; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 1.8rem; text-align: center; z-index: 9999; padding: 20px; }
-    #login-screen button { margin-top: 30px; padding: 16px 32px; background: #5865F2; color: white; border: none; border-radius: 8px; font-size: 1.5rem; cursor: pointer; }
-    #logout-btn { position: fixed; top: 10px; right: 10px; padding: 10px 20px; background: #da3633; color: white; border: none; border-radius: 6px; cursor: pointer; z-index: 10000; }
-    #admin-panel { position: fixed; top: 80px; right: 20px; width: 320px; background: rgba(22, 27, 34, 0.95); padding: 20px; border-radius: 12px; box-shadow: 0 6px 30px rgba(0,0,0,0.6); display: none; z-index: 1000; color: white; overflow-y: auto; max-height: 70vh; }
-    #admin-panel h3 { margin: 0 0 15px 0; text-align: center; }
-    #newDiscordId { width: 100%; padding: 10px; margin-bottom: 10px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; }
-    #admin-panel button { width: 100%; background: #238636; color: white; padding: 10px; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 10px; }
-    .id-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #30363d; }
-    .id-item button { background: #da3633; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: #0d1117;
+      color: #e6edf3;
+    }
+    header {
+      background: #1f6feb;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    nav {
+      display: flex;
+      background: #0d47a1;
+    }
+    nav a {
+      flex: 1;
+      color: white;
+      text-align: center;
+      padding: 14px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    nav a.active {
+      background: #1f6feb;
+    }
+    nav a:hover {
+      background: #388bfd;
+    }
+    .container {
+      max-width: 760px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    form {
+      background: rgba(22, 27, 34, 0.92);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      color: #e6edf3;
+    }
+    label {
+      display: block;
+      margin: 18px 0 6px;
+      font-weight: 600;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 16px;
+      background: #0d1117;
+      color: #e6edf3;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    button {
+      background: #238636;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #2ea043;
+    }
+    #status {
+      margin-top: 16px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .report-item {
+      background: rgba(22, 27, 34, 0.92);
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      line-height: 1.6;
+      position: relative;
+    }
+    .delete-btn {
+      background: #da3633;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      position: absolute;
+      top: 15px;
+      right: 15px;
+    }
+    .delete-btn:hover {
+      background: #f85149;
+    }
+    #search-container {
+      margin: 20px 0;
+      text-align: center;
+    }
+    #searchInput {
+      width: 100%;
+      max-width: 500px;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      background: #0d1117;
+      color: #e6edf3;
+    }
+    #no-results {
+      text-align: center;
+      color: #8b949e;
+      font-style: italic;
+      margin: 30px 0;
+      display: none;
+    }
+    #login-screen, #denied-screen {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      text-align: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+    #login-screen button {
+      margin-top: 30px;
+      padding: 16px 32px;
+      background: #5865F2;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    #logout-btn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      padding: 10px 20px;
+      background: #da3633;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      z-index: 10000;
+    }
+    #admin-panel {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      width: 320px;
+      background: rgba(22, 27, 34, 0.95);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 6px 30px rgba(0,0,0,0.6);
+      display: none;
+      z-index: 1000;
+      color: white;
+      overflow-y: auto;
+      max-height: 70vh;
+    }
+    #admin-panel h3 {
+      margin: 0 0 15px 0;
+      text-align: center;
+    }
+    #newDiscordId {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: white;
+      border-radius: 6px;
+    }
+    #admin-panel button {
+      width: 100%;
+      background: #238636;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .id-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #30363d;
+    }
+    .id-item button {
+      background: #da3633;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
+  <!-- Login screen -->
   <div id="login-screen">
     <h2>EW Mod Panel</h2>
     <p>Sign in with Discord to access the panel.</p>
     <button onclick="signInWithDiscord()">Sign in with Discord</button>
   </div>
 
+  <!-- Access denied screen -->
   <div id="denied-screen" style="display:none;">
     <h2>Access Denied</h2>
     <p>Your Discord account is not authorized.</p>
-    <button onclick="sb.auth.signOut().then(() => location.reload())">Logout & Try Again</button>
+    <button onclick="logout()">Logout & Try Again</button>
   </div>
 
+  <!-- Main content -->
   <div id="main-content" style="display:none;">
-    <button id="logout-btn" onclick="sb.auth.signOut().then(() => location.reload())">Logout</button>
+    <button id="logout-btn" onclick="logout()">Logout</button>
 
+    <!-- Admin panel -->
     <div id="admin-panel">
       <h3>Manage Allowed Discord IDs</h3>
       <input type="text" id="newDiscordId" placeholder="Discord ID (e.g. 1163584865170632816)">
@@ -104,34 +298,30 @@
   </div>
 
   <script>
-    const API_ENDPOINT = 'https://ugijazxbscpiwavmkjbr.supabase.co/functions/v1/reports-api';
+    const API_BASE = 'https://ugijazxbscpiwavmkjbr.supabase.co/functions/v1/reports-api';
 
-    let allReports = [];
-
-    // Authorization check (now client-side only uses anon key for auth, but all data calls go through Edge Function)
-    (async () => {
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) {
-        document.getElementById('login-screen').style.display = 'flex';
-        document.getElementById('main-content').style.display = 'none';
-        document.getElementById('denied-screen').style.display = 'none';
-        return;
-      }
-
-      const userId = session.user.id;
-      const discordId = String(session.user.user_metadata?.sub || '');
-
-      const isAdmin = ['43940f16-1cf6-4790-80fd-711c563362a2', 'c6d1bc4f-9824-4fa8-a1a6-83adb524b457', '448d355f-ff7f-4ffd-be5f-096c1fcd2c26'].includes(userId);
-
-      const response = await fetch(`${API_ENDPOINT}/check-access`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ discordId })
+    async function signInWithDiscord() {
+      // This uses Supabase client only for auth (anon key is safe/public)
+      const { supabase } = window;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: { redirectTo: window.location.href }
       });
+      if (error) alert('Login error: ' + error.message);
+    }
 
-      const result = await response.json();
+    async function logout() {
+      const { supabase } = window;
+      await supabase.auth.signOut();
+      location.reload();
+    }
 
-      if (!result.allowed && !isAdmin) {
+    // Check if user is authorized after login (via Edge Function)
+    (async () => {
+      const response = await fetch(API_BASE + '/check-access', { credentials: 'include' });
+      const { authorized, isAdmin } = await response.json();
+
+      if (!authorized) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-content').style.display = 'none';
         document.getElementById('denied-screen').style.display = 'flex';
@@ -148,14 +338,6 @@
       }
     })();
 
-    async function signInWithDiscord() {
-      const { error } = await sb.auth.signInWithOAuth({
-        provider: 'discord',
-        options: { redirectTo: window.location.href }
-      });
-      if (error) alert('Login error: ' + error.message);
-    }
-
     function showTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
@@ -166,90 +348,59 @@
 
     async function loadReports() {
       const list = document.getElementById('reports-list');
-      const noResults = document.getElementById('no-results');
       list.innerHTML = 'Loading reports...';
-      noResults.style.display = 'none';
 
       try {
-        const response = await fetch(`${API_ENDPOINT}/reports`, { method: 'GET' });
-        const data = await response.json();
+        const res = await fetch(API_BASE + '/reports');
+        if (!res.ok) throw new Error(await res.text());
+        const reports = await res.json();
 
-        if (!response.ok) throw new Error(data.error || 'Failed to load');
-
-        allReports = data || [];
-        if (allReports.length === 0) {
+        if (reports.length === 0) {
           list.innerHTML = '<p style="text-align:center; color:#8b949e;">No reports yet.</p>';
           return;
         }
-        renderReports(allReports);
-      } catch (err) {
-        list.innerHTML = `<p style="color:#f85149; text-align:center;">Error: ${err.message}</p>`;
-      }
-    }
 
-    function renderReports(reports) {
-      const list = document.getElementById('reports-list');
-      const noResults = document.getElementById('no-results');
-      list.innerHTML = '';
+        list.innerHTML = '';
+        reports.forEach(r => {
+          const item = document.createElement('div');
+          item.className = 'report-item';
+          item.innerHTML = `
+            <strong>Reported user:</strong> ${r.reported_user || '—'}<br>
+            <strong>Reason:</strong> ${r.reason || '—'}<br>
+            <strong>Punishment:</strong> ${r.punishment || 'None'}<br>
+            <strong>Moderator:</strong> ${r.moderator || '—'}<br>
+            <strong>Submitted:</strong> ${new Date(r.created_at).toLocaleString()}<br>
+          `;
+          if (r.link) item.innerHTML += `<a href="${r.link}" target="_blank">Proof link</a><br>`;
+          if (r.image_url) item.innerHTML += `<img src="${r.image_url}" style="max-width:100%; margin-top:10px;" alt="image"><br>`;
+          if (r.video_url) item.innerHTML += `<video src="${r.video_url}" controls style="max-width:100%; margin-top:10px;"></video><br>`;
 
-      if (reports.length === 0) {
-        noResults.style.display = 'block';
-        return;
-      }
-
-      noResults.style.display = 'none';
-      reports.forEach(r => {
-        const item = document.createElement('div');
-        item.className = 'report-item';
-        item.innerHTML = `
-          <strong>Reported user:</strong> ${r.reported_user || '—'}<br>
-          <strong>Reason:</strong> ${r.reason || '—'}<br>
-          <strong>Punishment:</strong> ${r.punishment || 'None'}<br>
-          <strong>Moderator:</strong> ${r.moderator || '—'}<br>
-          <strong>Submitted:</strong> ${new Date(r.created_at).toLocaleString()}<br>
-        `;
-        if (r.link) item.innerHTML += `<a href="${r.link}" target="_blank">Proof link</a><br>`;
-        if (r.image_url) item.innerHTML += `<img src="${r.image_url}" style="max-width:100%; margin-top:10px;" alt="image"><br>`;
-        if (r.video_url) item.innerHTML += `<video src="${r.video_url}" controls style="max-width:100%; margin-top:10px;"></video><br>`;
-
-        sb.auth.getUser().then(({ data: { user } }) => {
-          const isAdmin = ALLOWED_ADMIN_UUIDS.includes(user.id);
-          if (isAdmin) {
+          // Delete button for admins only (client-side check)
+          if (r.isAdmin) {
             const delBtn = document.createElement('button');
             delBtn.className = 'delete-btn';
             delBtn.textContent = 'Delete';
             delBtn.onclick = () => deleteReport(r.id, item);
             item.appendChild(delBtn);
           }
+
+          list.appendChild(item);
         });
-
-        list.appendChild(item);
-      });
+      } catch (err) {
+        list.innerHTML = `<p style="color:#f85149; text-align:center;">Error: ${err.message}</p>`;
+      }
     }
-
-    document.getElementById('searchInput')?.addEventListener('input', e => {
-      const term = e.target.value.toLowerCase().trim();
-      if (!term) return renderReports(allReports);
-      const filtered = allReports.filter(r =>
-        [r.reported_user, r.reason, r.punishment, r.moderator, r.link]
-          .some(v => v?.toLowerCase().includes(term))
-      );
-      renderReports(filtered);
-    });
 
     async function deleteReport(id, element) {
       if (!confirm("Delete permanently?")) return;
       try {
-        const response = await fetch(`${API_ENDPOINT}/delete-report`, {
+        const res = await fetch(API_BASE + '/delete-report', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id })
         });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Failed');
+        if (!res.ok) throw new Error(await res.text());
         element.remove();
-        allReports = allReports.filter(r => r.id !== id);
-        renderReports(allReports);
       } catch (err) {
         alert("Delete failed: " + err.message);
       }
@@ -261,26 +412,21 @@
       status.textContent = 'Submitting...';
       status.style.color = 'white';
 
-      const { data: { user } } = await sb.auth.getUser();
-      const discordId = user?.user_metadata?.sub || null;
-
       const formData = new FormData();
       formData.append('reported_user', document.getElementById('reported_user').value.trim() || '');
       formData.append('reason', document.getElementById('reason').value.trim());
       formData.append('punishment', document.getElementById('punishment').value.trim() || '');
       formData.append('moderator', document.getElementById('moderator').value.trim() || '');
       formData.append('link', document.getElementById('link').value.trim() || '');
-      formData.append('submitted_by_discord_id', discordId);
       if (document.getElementById('image').files[0]) formData.append('image', document.getElementById('image').files[0]);
       if (document.getElementById('video').files[0]) formData.append('video', document.getElementById('video').files[0]);
 
       try {
-        const response = await fetch(`${API_ENDPOINT}/submit-report`, {
+        const res = await fetch(API_BASE + '/submit-report', {
           method: 'POST',
           body: formData
         });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Failed');
+        if (!res.ok) throw new Error(await res.text());
 
         status.style.color = '#2ea043';
         status.textContent = 'Submitted successfully!';
@@ -288,8 +434,7 @@
         setTimeout(() => status.textContent = '', 4000);
       } catch (err) {
         status.style.color = '#f85149';
-        status.textContent = 'Failed: ' + (err.message || 'Unknown');
-        console.error(err);
+        status.textContent = 'Failed: ' + err.message;
       }
     });
 
@@ -297,19 +442,18 @@
       const input = document.getElementById('newDiscordId');
       const discordId = input.value.trim();
 
-      if (!discordId || isNaN(discordId)) {
-        alert('Enter a valid numeric Discord ID');
+      if (!discordId) {
+        alert('Enter a valid Discord ID');
         return;
       }
 
       try {
-        const response = await fetch(`${API_ENDPOINT}/add-id`, {
+        const res = await fetch(API_BASE + '/add-id', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ discordId })
         });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Failed');
+        if (!res.ok) throw new Error(await res.text());
 
         input.value = '';
         loadAllowedIds();
@@ -324,9 +468,9 @@
       list.innerHTML = 'Loading...';
 
       try {
-        const response = await fetch(`${API_ENDPOINT}/get-ids`);
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Failed');
+        const res = await fetch(API_BASE + '/get-ids');
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
 
         list.innerHTML = '';
         if (data.length === 0) {
@@ -351,17 +495,24 @@
     async function deleteDiscordId(id) {
       if (!confirm('Remove this Discord ID?')) return;
       try {
-        const response = await fetch(`${API_ENDPOINT}/delete-id`, {
+        const res = await fetch(API_BASE + '/delete-id', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id })
         });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Failed');
+        if (!res.ok) throw new Error(await res.text());
         loadAllowedIds();
       } catch (err) {
         alert('Delete failed');
       }
+    }
+
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+      document.querySelector(`nav a[href="#${tabId}"]`)?.classList.add('active');
+      if (tabId === 'view') loadReports();
     }
   </script>
 </body>
