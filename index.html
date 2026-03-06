@@ -250,7 +250,7 @@
 </head>
 <body>
 
-  <!-- Blocked screen (used only as fallback) -->
+  <!-- Blocked screen -->
   <div id="blocked" style="display:none;">
     <div>
       <h2>Access Denied</h2>
@@ -312,12 +312,12 @@
 
   <script>
     // ────────────────────────────────────────────────
-    // SERVER-SIDE PASSWORD CHECK ENDPOINT
-    // Your Edge Function URL (verify-passwords)
+    // SERVER-SIDE PASSWORD VERIFICATION ENDPOINT
+    // Your verify-passwords function
     // ────────────────────────────────────────────────
-    const PASSWORD_CHECK_URL = 'https://ugijazxbscpiwavmkjbr.supabase.co/functions/v1/verify-passwords';
+    const PASSWORD_VERIFY_URL = 'https://ugijazxbscpiwavmkjbr.supabase.co/functions/v1/verify-passwords';
 
-    // Page access check (runs on load - server-side)
+    // Page access check (server-side)
     (async () => {
       const entered = prompt("Enter password to access EW Mod Panel:");
 
@@ -327,7 +327,7 @@
       }
 
       try {
-        const res = await fetch(PASSWORD_CHECK_URL, {
+        const res = await fetch(PASSWORD_VERIFY_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type: 'page', password: entered })
@@ -351,7 +351,7 @@
     })();
 
     // ────────────────────────────────────────────────
-    // SUPABASE SETUP
+    // SUPABASE SETUP (only public anon key — safe with RLS)
     // ────────────────────────────────────────────────
     const supabaseUrl = 'https://ugijazxbscpiwavmkjbr.supabase.co';
     const supabaseKey = 'sb_publishable_tUlhOkObHpTpwlh-9R7x0Q_1kd_q6qe';
@@ -368,7 +368,9 @@
       document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
       document.querySelector(`nav a[href="#${tabId}"]`).classList.add('active');
 
-      if (tabId === 'view') loadReports();
+      if (tabId === 'view') {
+        loadReports();
+      }
     }
 
     async function loadReports() {
@@ -468,8 +470,8 @@
       if (!entered) return;
 
       try {
-        // Server-side password check (hidden)
-        const res = await fetch(PASSWORD_CHECK_URL, {
+        // Server-side password check
+        const res = await fetch(PASSWORD_VERIFY_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type: 'delete', password: entered })
