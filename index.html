@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EW Mod Panel</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    /* Your original styles remain unchanged */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -152,6 +152,7 @@
       text-align: center;
       padding: 20px;
     }
+
     /* Background image only on reports tab */
     #view {
       position: relative;
@@ -183,6 +184,7 @@
       position: relative;
       z-index: 1;
     }
+
     /* ──── Red + Black RGB Glowing Orbs ──── */
     .orb {
       position: absolute;
@@ -248,7 +250,7 @@
 </head>
 <body>
 
-  <!-- Blocked screen -->
+  <!-- Blocked screen (used only as fallback) -->
   <div id="blocked" style="display:none;">
     <div>
       <h2>Access Denied</h2>
@@ -310,35 +312,46 @@
 
   <script>
     // ────────────────────────────────────────────────
-    // PAGE ACCESS PASSWORD
+    // SERVER-SIDE PASSWORD CHECK ENDPOINT
+    // Your Edge Function URL (verify-passwords)
     // ────────────────────────────────────────────────
-    const PAGE_PASSWORD = "EW123";
+    const PASSWORD_CHECK_URL = 'https://ugijazxbscpiwavmkjbr.supabase.co/functions/v1/verify-passwords';
 
-    const enteredPagePw = prompt("Enter password to access EW Mod Panel:");
+    // Page access check (runs on load - server-side)
+    (async () => {
+      const entered = prompt("Enter password to access EW Mod Panel:");
 
-    if (enteredPagePw !== PAGE_PASSWORD) {
-      document.getElementById('blocked').style.display = 'flex';
-      document.body.innerHTML = document.getElementById('blocked').outerHTML;
-      throw new Error("Page access denied");
-    }
+      if (!entered) {
+        document.body.innerHTML = '<div style="position:fixed;inset:0;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:2rem;text-align:center;padding:20px;">Access Denied</div>';
+        return;
+      }
+
+      try {
+        const res = await fetch(PASSWORD_CHECK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'page', password: entered })
+        });
+
+        if (!res.ok) throw new Error('Auth check failed');
+
+        const { allowed } = await res.json();
+
+        if (!allowed) {
+          document.body.innerHTML = '<div style="position:fixed;inset:0;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:2rem;text-align:center;padding:20px;">Incorrect password</div>';
+          return;
+        }
+
+        // Correct → show site
+        document.getElementById('blocked')?.style.display = 'none';
+      } catch (err) {
+        console.error('Page auth error:', err);
+        document.body.innerHTML = '<div style="position:fixed;inset:0;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:2rem;text-align:center;padding:20px;">Server error - try again later</div>';
+      }
+    })();
 
     // ────────────────────────────────────────────────
-    // DELETE PASSWORD
-    // ────────────────────────────────────────────────
-    const DELETE_PASSWORD = "4221";
-
-    // ────────────────────────────────────────────────
-    // REPORT COOLDOWN (1 minute)
-    // ────────────────────────────────────────────────
-    const COOLDOWN_MS = 60 * 1000; // 1 minute
-
-    // ────────────────────────────────────────────────
-    // DISCORD WEBHOOK (added here)
-    // ────────────────────────────────────────────────
-    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1475096593781755957/BGMMBDGhj8oON92-EolQUaG2QS3_dK4Wc_QfzLyQ5_2zjPwR0azy1dyQAr18siCclgCZ";
-
-    // ────────────────────────────────────────────────
-    // REST OF THE SCRIPT
+    // SUPABASE SETUP
     // ────────────────────────────────────────────────
     const supabaseUrl = 'https://ugijazxbscpiwavmkjbr.supabase.co';
     const supabaseKey = 'sb_publishable_tUlhOkObHpTpwlh-9R7x0Q_1kd_q6qe';
@@ -411,11 +424,9 @@
         if (report.link) {
           item.innerHTML += `<strong>Proof link:</strong> <a href="${report.link}" target="_blank" rel="noopener noreferrer">${report.link}</a><br>`;
         }
-
         if (report.image_url) {
           item.innerHTML += `<img src="${report.image_url}" style="max-width:100%; margin-top:12px; border-radius:8px;" alt="Proof image"><br>`;
         }
-
         if (report.video_url) {
           item.innerHTML += `<video src="${report.video_url}" controls style="max-width:100%; margin-top:12px; border-radius:8px;"></video><br>`;
         }
@@ -432,28 +443,49 @@
 
     document.getElementById('searchInput').addEventListener('input', function(e) {
       const term = e.target.value.toLowerCase().trim();
-      if (!term) return renderReports(allReports);
 
-      const filtered = allReports.filter(r =>
-        (r.reported_user || '').toLowerCase().includes(term) ||
-        (r.reason || '').toLowerCase().includes(term) ||
-        (r.punishment || '').toLowerCase().includes(term) ||
-        (r.moderator || '').toLowerCase().includes(term) ||
-        (r.link || '').toLowerCase().includes(term)
-      );
+      if (!term) {
+        renderReports(allReports);
+        return;
+      }
+
+      const filtered = allReports.filter(report => {
+        return (
+          (report.reported_user || '').toLowerCase().includes(term) ||
+          (report.reason || '').toLowerCase().includes(term) ||
+          (report.punishment || '').toLowerCase().includes(term) ||
+          (report.moderator || '').toLowerCase().includes(term) ||
+          (report.link || '').toLowerCase().includes(term)
+        );
+      });
 
       renderReports(filtered);
     });
 
     async function deleteReport(reportId, reportElement) {
-      const enteredPw = prompt("Enter delete password:");
-      if (enteredPw !== "4221") {
-        alert("Incorrect delete password.");
-        return;
-      }
-      if (!confirm('Delete this report permanently?')) return;
+      const entered = prompt("Enter delete password:");
+
+      if (!entered) return;
 
       try {
+        // Server-side password check (hidden)
+        const res = await fetch(PASSWORD_CHECK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'delete', password: entered })
+        });
+
+        if (!res.ok) throw new Error('Auth check failed');
+
+        const { allowed } = await res.json();
+
+        if (!allowed) {
+          alert("Incorrect delete password.");
+          return;
+        }
+
+        if (!confirm('Delete this report permanently? This cannot be undone.')) return;
+
         const { data, error } = await sb
           .from('reports')
           .delete()
@@ -468,7 +500,8 @@
         reportElement.remove();
         allReports = allReports.filter(r => r.id !== reportId);
         renderReports(allReports);
-        console.log('Report deleted (ID:', reportId, ')');
+
+        console.log('Report deleted successfully (ID:', reportId, ')');
       } catch (err) {
         console.error('Delete failed:', err);
         alert('Delete failed: ' + (err.message || 'Unknown error'));
@@ -478,12 +511,11 @@
     document.getElementById('reportForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
-      // Cooldown check
       const lastSubmit = localStorage.getItem('lastReportTime');
       const now = Date.now();
-      if (lastSubmit && now - parseInt(lastSubmit) < 60_000) {
-        const remaining = Math.ceil((60_000 - (now - parseInt(lastSubmit))) / 1000);
-        document.getElementById('status').style.color = 'red';
+      if (lastSubmit && now - parseInt(lastSubmit) < COOLDOWN_MS) {
+        const remaining = Math.ceil((COOLDOWN_MS - (now - parseInt(lastSubmit))) / 1000);
+        document.getElementById('status').style.color = '#f85149';
         document.getElementById('status').textContent = `Wait ${remaining} seconds before submitting another report.`;
         setTimeout(() => document.getElementById('status').textContent = '', 5000);
         return;
@@ -498,8 +530,10 @@
       const punishment = document.getElementById('punishment').value.trim() || null;
       const moderator = document.getElementById('moderator').value.trim() || null;
       const link = document.getElementById('link').value.trim() || null;
+
       let image_url = '';
       let video_url = '';
+
       const imageFile = document.getElementById('image').files[0];
       const videoFile = document.getElementById('video').files[0];
 
@@ -534,36 +568,13 @@
 
         if (error) throw error;
 
-        // ────────────────────────────────────────────────
-        // SEND DISCORD NOTIFICATION
-        // ────────────────────────────────────────────────
-        fetch(DISCORD_WEBHOOK_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            content: "Report has been made, view on https://easternwarfarereports.github.io/reports-form/#submit"
-          })
-        })
-        .then(response => {
-          if (!response.ok) {
-            console.warn('Discord webhook failed:', response.status);
-          }
-        })
-        .catch(err => {
-          console.error('Failed to send Discord notification:', err);
-        });
-        // ────────────────────────────────────────────────
-
-        // Save submit timestamp
-        localStorage.setItem('lastReportTime', Date.now().toString());
+        localStorage.setItem('lastReportTime', now.toString());
 
         status.style.color = '#2ea043';
         status.textContent = 'Report submitted successfully!';
         document.getElementById('reportForm').reset();
-        setTimeout(() => status.textContent = '', 4000);
 
+        setTimeout(() => status.textContent = '', 4000);
       } catch (err) {
         status.style.color = '#f85149';
         status.textContent = 'Submission failed: ' + (err.message || 'Unknown error');
