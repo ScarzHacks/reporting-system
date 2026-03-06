@@ -222,9 +222,12 @@
     }
     .id-item button {
       background: #da3633;
+      color: white;
+      border: none;
       padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
       font-size: 12px;
-      width: auto;
     }
   </style>
 </head>
@@ -247,7 +250,7 @@
   <div id="main-content" style="display:none;">
     <button id="logout-btn" onclick="sb.auth.signOut().then(() => location.reload())">Logout</button>
 
-    <!-- Side admin panel - only you see this -->
+    <!-- Side admin panel - only visible to you -->
     <div id="admin-panel">
       <h3>Manage Allowed Discord IDs</h3>
       <input type="text" id="newDiscordId" placeholder="Discord ID (e.g. 1163584865170632816)">
@@ -310,7 +313,7 @@
 
     let allReports = [];
 
-    // Check login and authorization
+    // Check login and authorization on load
     (async () => {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) {
@@ -328,7 +331,6 @@
         return;
       }
 
-      // Authorized
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('denied-screen').style.display = 'none';
       document.getElementById('main-content').style.display = 'block';
@@ -338,6 +340,8 @@
         document.getElementById('admin-panel').style.display = 'block';
         loadAllowedIds();
       }
+
+      console.log('Authorized access granted for user ID:', userId);
     })();
 
     async function signInWithDiscord() {
@@ -490,20 +494,27 @@
       }
     });
 
-    // Admin panel functions (only visible to you)
+    // Admin panel functions - only visible to you
     async function addDiscordId() {
       const input = document.getElementById('newDiscordId');
       const discordId = input.value.trim();
-      if (!discordId || isNaN(discordId)) return alert('Enter a valid numeric Discord ID');
+
+      if (!discordId || isNaN(discordId)) {
+        alert('Enter a valid numeric Discord ID');
+        return;
+      }
+
+      const { data: { user } } = await sb.auth.getUser();
 
       const { error } = await sb.from('allowed_discord_ids').insert({
         discord_id: discordId,
-        added_by: sb.auth.getUser().then(r => r.data.user.id)
+        added_by: user.id
       });
 
       if (error) return alert('Failed: ' + error.message);
       input.value = '';
       loadAllowedIds();
+      alert('Discord ID added!');
     }
 
     async function loadAllowedIds() {
