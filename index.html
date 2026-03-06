@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EW Mod Panel</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -240,7 +239,7 @@
       0%, 100% { transform: translate(0, 0); }
       25%  { transform: translate(60px, -40px); }
       50%  { transform: translate(-30px, 70px); }
-      75%  { transform: translate(-80px, -30px); }
+      75%  { transform: translate(-80px, -20px); }
     }
     @keyframes pulseOrb {
       0%   { opacity: 0.28; transform: scale(0.92); }
@@ -312,12 +311,13 @@
 
   <script>
     // ────────────────────────────────────────────────
-    // SERVER-SIDE PASSWORD VERIFICATION ENDPOINT
-    // Your verify-passwords function
+    // SERVER-SIDE PASSWORD CHECK ENDPOINT
     // ────────────────────────────────────────────────
-    const PASSWORD_VERIFY_URL = 'https://ugijazxbscpiwavmkjbr.supabase.co/functions/v1/verify-passwords';
+    const PASSWORD_CHECK_URL = 'https://ugijazxbscpiwavmkjbr.supabase.co/functions/v1/verify-passwords';
 
-    // Page access check (server-side)
+    // ────────────────────────────────────────────────
+    // PAGE ACCESS CHECK (server-side, no password in browser)
+    // ────────────────────────────────────────────────
     (async () => {
       const entered = prompt("Enter password to access EW Mod Panel:");
 
@@ -327,7 +327,7 @@
       }
 
       try {
-        const res = await fetch(PASSWORD_VERIFY_URL, {
+        const res = await fetch(PASSWORD_CHECK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type: 'page', password: entered })
@@ -343,15 +343,15 @@
         }
 
         // Correct → show site
-        document.getElementById('blocked')?.style.display = 'none';
+        document.getElementById('blocked').style.display = 'none';
       } catch (err) {
         console.error('Page auth error:', err);
-        document.body.innerHTML = '<div style="position:fixed;inset:0;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:2rem;text-align:center;padding:20px;">Server error - try again later</div>';
+        document.body.innerHTML = '<div style="position:fixed;inset:0;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:2rem;text-align:center;padding:20px;">Server error</div>';
       }
     })();
 
     // ────────────────────────────────────────────────
-    // SUPABASE SETUP (only public anon key — safe with RLS)
+    // SUPABASE SETUP
     // ────────────────────────────────────────────────
     const supabaseUrl = 'https://ugijazxbscpiwavmkjbr.supabase.co';
     const supabaseKey = 'sb_publishable_tUlhOkObHpTpwlh-9R7x0Q_1kd_q6qe';
@@ -361,6 +361,9 @@
 
     let allReports = [];
 
+    // ────────────────────────────────────────────────
+    // TAB SWITCHING
+    // ────────────────────────────────────────────────
     function showTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
@@ -368,9 +371,7 @@
       document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
       document.querySelector(`nav a[href="#${tabId}"]`).classList.add('active');
 
-      if (tabId === 'view') {
-        loadReports();
-      }
+      if (tabId === 'view') loadReports();
     }
 
     async function loadReports() {
@@ -402,15 +403,14 @@
 
     function renderReports(reports) {
       const list = document.getElementById('reports-list');
-      const noResults = document.getElementById('no-results');
       list.innerHTML = '';
 
       if (reports.length === 0) {
-        noResults.style.display = 'block';
+        document.getElementById('no-results').style.display = 'block';
         return;
       }
 
-      noResults.style.display = 'none';
+      document.getElementById('no-results').style.display = 'none';
 
       reports.forEach(report => {
         const item = document.createElement('div');
@@ -470,8 +470,7 @@
       if (!entered) return;
 
       try {
-        // Server-side password check
-        const res = await fetch(PASSWORD_VERIFY_URL, {
+        const res = await fetch(PASSWORD_CHECK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type: 'delete', password: entered })
