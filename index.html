@@ -174,7 +174,7 @@
       cursor: pointer;
       z-index: 10000;
     }
-    /* Side admin panel - only visible to you */
+    /* Side admin panel – only visible to admin UUIDs */
     #admin-panel {
       position: fixed;
       top: 80px;
@@ -250,7 +250,7 @@
   <div id="main-content" style="display:none;">
     <button id="logout-btn" onclick="sb.auth.signOut().then(() => location.reload())">Logout</button>
 
-    <!-- Side admin panel - only visible to you -->
+    <!-- Side admin panel – only visible to allowed admins -->
     <div id="admin-panel">
       <h3>Manage Allowed Discord IDs</h3>
       <input type="text" id="newDiscordId" placeholder="Discord ID (e.g. 1163584865170632816)">
@@ -309,12 +309,14 @@
 
     // === Supabase UUIDs that can access the panel (admin) ===
     const ALLOWED_ADMIN_UUIDS = [
-      '43940f16-1cf6-4790-80fd-711c563362a2' // Your Supabase UUID
+      '43940f16-1cf6-4790-80fd-711c563362a2',          // Your main UID
+      'c6d1bc4f-9824-4fa8-a1a6-83adb524b457',          // Additional user 1
+      '448d355f-ff7f-4ffd-be5f-096c1fcd2c26'           // Additional user 2
     ];
 
     let allReports = [];
 
-    // Listen for auth state changes (fixes logout/login loop)
+    // Listen for auth state changes to fix logout/login loop
     sb.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
         location.reload();
@@ -358,7 +360,7 @@
       document.getElementById('denied-screen').style.display = 'none';
       document.getElementById('main-content').style.display = 'block';
 
-      // Show admin panel only to admin
+      // Show admin panel only to admins
       if (isAdmin) {
         document.getElementById('admin-panel').style.display = 'block';
         loadAllowedIds();
@@ -521,7 +523,7 @@
       }
     });
 
-    // Admin panel functions - only visible to you
+    // Admin panel functions - only visible to admins
     async function addDiscordId() {
       const input = document.getElementById('newDiscordId');
       const discordId = input.value.trim();
