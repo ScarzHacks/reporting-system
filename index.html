@@ -347,26 +347,22 @@
     const { createClient } = window.supabase;
     const sb = createClient(supabaseUrl, supabaseKey);
 
-    let ALLOWED_USER_IDS = [];
+    // === ONLY THESE Supabase user IDs (UUIDs) can access the entire site ===
+    // Your ID is already added below
+    const ALLOWED_USER_IDS = [
+      '43940f16-1cf6-4790-80fd-711c563362a2'  // Your UID
+      // Add more trusted users here if needed, e.g.:
+      // 'another-uuid-here-1234-5678-9abc-def012345678'
+    ];
 
-    // Load allowed IDs from separate JSON file
+    let allReports = [];
+
+    // Check login and authorization on load
     (async () => {
-      try {
-        const response = await fetch('allowed-users.json');
-        if (!response.ok) throw new Error('Failed to load JSON');
-        const data = await response.json();
-        ALLOWED_USER_IDS = data.allowed || [];
-        console.log('Loaded allowed user IDs:', ALLOWED_USER_IDS);
-      } catch (err) {
-        console.error('Failed to load allowed-users.json:', err);
-        // Fallback: only your ID
-        ALLOWED_USER_IDS = ['43940f16-1cf6-4790-80fd-711c563362a2'];
-      }
-
-      // Now check login and authorization
       const { data: { session } } = await sb.auth.getSession();
 
       if (!session) {
+        // Not logged in → show login screen
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('main-content').style.display = 'none';
         document.getElementById('denied-screen').style.display = 'none';
@@ -375,7 +371,9 @@
 
       const userId = session.user.id;
 
+      // Check if this user ID is allowed
       if (!ALLOWED_USER_IDS.includes(userId)) {
+        // Unauthorized → show denied screen
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-content').style.display = 'none';
         document.getElementById('denied-screen').style.display = 'flex';
@@ -387,7 +385,7 @@
       document.getElementById('denied-screen').style.display = 'none';
       document.getElementById('main-content').style.display = 'block';
 
-      console.log('Authorized access for user ID:', userId);
+      console.log('Authorized access granted for user ID:', userId);
     })();
 
     // Discord login function
@@ -395,7 +393,7 @@
       const { error } = await sb.auth.signInWithOAuth({
         provider: 'discord',
         options: {
-          redirectTo: window.location.href  // returns to current page
+          redirectTo: window.location.href  // returns to current page after login
         }
       });
       if (error) alert('Login error: ' + error.message);
